@@ -13,7 +13,13 @@ use scraper::{Html, Selector};
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
-    run(&args.source).await;
+
+    match normalize_url(&args.source) {
+        Some(url) => {
+            run(url.as_str()).await;
+        }
+        None => panic!("Invalid URL"),
+    }
 }
 
 async fn run(source: &str) {
@@ -88,6 +94,24 @@ fn join_urls(base_url_string: &str, relative_url: &str) -> Option<String> {
     Some(joined_url.to_string())
 }
 
+fn normalize_url(url_str: &str) -> Option<String> {
+    let url_with_scheme = if !url_str.starts_with("http://") && !url_str.starts_with("https://") {
+        format!("https://{}", url_str)
+    } else {
+        url_str.to_string()
+    };
+
+    // Add a `/` to the end of the URL if it doesn't have one
+    let url_with_slash = if !url_with_scheme.ends_with('/') {
+        format!("{}/", url_with_scheme)
+    } else {
+        url_with_scheme
+    };
+
+    Some(url_with_slash)
+}
+
+
 #[cfg(test)]
 mod tests {
     
@@ -131,5 +155,17 @@ mod tests {
         let url = join_urls(a, b).unwrap();
         let expected = "https://en.wikipedia.org/wiki/Category:States_of_Austria";
         assert_eq!(url, expected);
+    }
+
+    #[test]
+    fn test_normalize_url() {
+        let url1 = "https://farooq.dev";
+        let url2 = "farooq.dev";
+        let expected = "https://farooq.dev/";
+
+        let normalized_url1 = normalize_url(url1).unwrap();
+        assert_eq!(normalized_url1, expected);
+        let normalized_url2 = normalize_url(url2).unwrap();
+        assert_eq!(normalized_url2, expected);
     }
 }
