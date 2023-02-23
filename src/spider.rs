@@ -47,7 +47,7 @@ impl Spider {
     pub async fn run(&mut self) {
         let Spider {
             id,
-            client: _,
+            client,
             rate_limiter,
             shutdown,
             sender,
@@ -88,7 +88,7 @@ impl Spider {
             };
 
             let res = select! {
-                res = rate_limiter.throttle(domain.to_string(), || Spider::crawl(url)) => {
+                res = rate_limiter.throttle(domain.to_string(), || Spider::crawl(client, url)) => {
                     // Type hint so that the IDE doesn't complain :)
                     let res: Result<Response> = res;
                     res
@@ -107,9 +107,9 @@ impl Spider {
         }
     }
 
-    async fn crawl(req: Request) -> Result<Response> {
+    async fn crawl(mut client: &Client, req: Request) -> Result<Response> {
         info!("Crawling {}", req.url);
-        let res = reqwest::get(req.url.as_str()).await?;
+        let res = client.get(req.url.as_str()).send().await?;
         Ok(Response::new(req.url, res))
     }
 }
