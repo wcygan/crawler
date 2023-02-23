@@ -1,5 +1,5 @@
 use crate::messages::{Html, NextUrl};
-use anyhow::Result;
+
 use async_channel::{Receiver, Sender};
 use lib_wc::sync::{RateLimiter, ShutdownListener};
 use reqwest::Client;

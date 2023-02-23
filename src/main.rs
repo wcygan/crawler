@@ -27,7 +27,7 @@ async fn main() -> Result<()> {
         _ = tokio::signal::ctrl_c() => {
             app.controller.shutdown().await;
             info!("Shutting down...");
-            return Ok(());
+            Ok(())
         }
     }
 }
