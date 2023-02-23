@@ -1,4 +1,4 @@
-use crate::messages::{Html, NextUrl};
+use crate::messages::{Request, Response};
 
 use async_channel::{Receiver, Sender};
 use lib_wc::sync::{MultiRateLimiter, ShutdownListener};
@@ -20,17 +20,17 @@ pub struct Spider {
     /// The shutdown listener.
     shutdown: ShutdownListener,
     /// The channel to send HTML to.
-    sender: Sender<Html>,
+    sender: Sender<Response>,
     /// The channel to receive URLs to crawl.
-    receiver: Receiver<NextUrl>,
+    receiver: Receiver<Request>,
 }
 
 impl Spider {
     pub fn new(
         shutdown: ShutdownListener,
         rate_limiter: Arc<MultiRateLimiter<String>>,
-        sender: Sender<Html>,
-        receiver: Receiver<NextUrl>,
+        sender: Sender<Response>,
+        receiver: Receiver<Request>,
     ) -> Self {
         static COUNTER: AtomicUsize = AtomicUsize::new(0);
         Self {

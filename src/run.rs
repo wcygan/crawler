@@ -27,16 +27,16 @@ fn new_spider(app: &Application) -> Spider {
     Spider::new(
         app.controller.subscribe(),
         app.rate_limiter.clone(),
-        app.html_sender.clone(),
-        app.next_url_receiver.clone(),
+        app.send_response.clone(),
+        app.receive_request.clone(),
     )
 }
 
 fn new_processor(app: &Application) -> Processor {
     Processor::new(
         app.controller.subscribe(),
-        app.next_url_sender.clone(),
-        app.html_receiver.clone(),
+        app.send_request.clone(),
+        app.receive_response.clone(),
         app.index.clone(),
     )
 }

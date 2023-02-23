@@ -1,5 +1,5 @@
 use crate::index::Index;
-use crate::messages::{Html, NextUrl};
+use crate::messages::{Request, Response};
 use anyhow::{Context, Result};
 use async_channel::{Receiver, Sender};
 use lib_wc::sync::ShutdownListener;
@@ -13,9 +13,9 @@ pub struct Processor {
     /// The ID of the processor.
     id: usize,
     /// The channel to receive HTML from.
-    receiver: Receiver<Html>,
+    receiver: Receiver<Response>,
     /// The channel to send URLs to crawl to.
-    sender: Sender<NextUrl>,
+    sender: Sender<Request>,
     /// The shutdown listener.
     shutdown: ShutdownListener,
     /// The index.
@@ -25,8 +25,8 @@ pub struct Processor {
 impl Processor {
     pub fn new(
         shutdown: ShutdownListener,
-        sender: Sender<NextUrl>,
-        receiver: Receiver<Html>,
+        sender: Sender<Request>,
+        receiver: Receiver<Response>,
         index: Arc<Index>,
     ) -> Self {
         static COUNTER: AtomicUsize = AtomicUsize::new(0);
@@ -41,7 +41,7 @@ impl Processor {
 
     pub async fn run(&mut self) {
         loop {
-            let res: Result<Html> = select! {
+            let res: Result<Response> = select! {
                 _ = self.shutdown.recv() => {
                     info!("Shutting down processor {}...", self.id);
                     return;

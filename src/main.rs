@@ -8,7 +8,7 @@ mod urls;
 
 use crate::args::Args;
 use crate::index::Index;
-use crate::messages::{Html, NextUrl};
+use crate::messages::{Request, Response};
 use crate::run::run;
 use anyhow::Result;
 use async_channel::{Receiver, Sender};
@@ -35,10 +35,10 @@ pub struct Application {
     pub controller: ShutdownController,
     pub rate_limiter: Arc<MultiRateLimiter<String>>,
     pub index: Arc<Index>,
-    pub next_url_sender: Sender<NextUrl>,
-    pub next_url_receiver: Receiver<NextUrl>,
-    pub html_sender: Sender<Html>,
-    pub html_receiver: Receiver<Html>,
+    pub send_request: Sender<Request>,
+    pub receive_request: Receiver<Request>,
+    pub send_response: Sender<Response>,
+    pub receive_response: Receiver<Response>,
 }
 
 impl Application {
@@ -48,17 +48,17 @@ impl Application {
         let rate_limiter: Arc<MultiRateLimiter<String>> =
             Arc::new(MultiRateLimiter::new(Duration::from_millis(args.interval)));
         let index = Arc::new(Index::new());
-        let (next_url_sender, next_url_receiver) = async_channel::bounded::<NextUrl>(1000);
-        let (html_sender, html_receiver) = async_channel::bounded::<Html>(1000);
+        let (send_request, receive_request) = async_channel::bounded::<Request>(1000);
+        let (send_response, receive_response) = async_channel::bounded::<Response>(1000);
         Self {
             args,
             controller,
             rate_limiter,
             index,
-            next_url_sender,
-            next_url_receiver,
-            html_sender,
-            html_receiver,
+            send_request,
+            receive_request,
+            send_response,
+            receive_response,
         }
     }
 
