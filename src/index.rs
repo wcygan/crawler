@@ -20,10 +20,8 @@ impl Drop for Index {
         // TODO: write the index to a file
         for e in self.inner.iter() {
             println!("{} -> {}", e.key(), e.value().len());
-
-            let v = e.value();
-            for e in v.iter() {
-                info!("-> {}", e.key());
+            for e in e.value().iter() {
+                info!("\t-> {}", e.key());
             }
         }
     }
