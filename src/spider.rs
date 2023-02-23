@@ -1,16 +1,18 @@
 use crate::messages::{Html, NextUrl};
+use std::hash::Hash;
 
 use async_channel::{Receiver, Sender};
-use lib_wc::sync::{RateLimiter, ShutdownListener};
+use lib_wc::sync::{MultiRateLimiter, ShutdownListener};
 use reqwest::Client;
 use std::sync::Arc;
+use tokio::select;
 
 /// The spider which crawls the web.
-struct Spider {
+pub struct Spider {
     /// The HTTP client.
     client: Client,
     /// The rate limiter.
-    rate_limiter: Arc<RateLimiter>,
+    rate_limiter: Arc<MultiRateLimiter<String>>,
     /// The shutdown listener.
     shutdown: ShutdownListener,
     /// The channel to send HTML to.
@@ -21,18 +23,30 @@ struct Spider {
 
 impl Spider {
     pub fn new(
-        client: Client,
-        rate_limiter: Arc<RateLimiter>,
+        rate_limiter: Arc<MultiRateLimiter<String>>,
         shutdown: ShutdownListener,
         sender: Sender<Html>,
         receiver: Receiver<NextUrl>,
     ) -> Self {
         Self {
-            client,
+            client: Client::new(),
             rate_limiter,
             shutdown,
             sender,
             receiver,
+        }
+    }
+
+    pub async fn run(&mut self) {
+        loop {
+            select! {
+                _ = self.shutdown.recv() => {
+                    break;
+                }
+                next_url = self.receiver.recv() => {
+
+                }
+            }
         }
     }
 }

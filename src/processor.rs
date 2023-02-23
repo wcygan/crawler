@@ -2,7 +2,7 @@ use crate::messages::{Html, NextUrl};
 use async_channel::{Receiver, Sender};
 use lib_wc::sync::ShutdownListener;
 
-struct Processor {
+pub struct Processor {
     /// The channel to receive HTML from.
     receiver: Receiver<Html>,
     /// The channel to send URLs to crawl to.
