@@ -1,7 +1,7 @@
 use crate::messages::{Html, NextUrl};
 use anyhow::Result;
 use async_channel::{Receiver, Sender};
-use lib_wc::sync::RateLimiter;
+use lib_wc::sync::{RateLimiter, ShutdownListener};
 use reqwest::Client;
 use std::sync::Arc;
 
@@ -11,6 +11,8 @@ struct Spider {
     client: Client,
     /// The rate limiter.
     rate_limiter: Arc<RateLimiter>,
+    /// The shutdown listener.
+    shutdown: ShutdownListener,
     /// The channel to send HTML to.
     sender: Sender<Html>,
     /// The channel to receive URLs to crawl.
@@ -18,38 +20,19 @@ struct Spider {
 }
 
 impl Spider {
-    fn new(
+    pub fn new(
+        client: Client,
         rate_limiter: Arc<RateLimiter>,
+        shutdown: ShutdownListener,
         sender: Sender<Html>,
         receiver: Receiver<NextUrl>,
     ) -> Self {
         Self {
-            client: Client::new(),
+            client,
             rate_limiter,
+            shutdown,
             sender,
             receiver,
         }
-    }
-
-    async fn run(&self) -> Result<()> {
-        println!("Spider started");
-        Ok(())
-    }
-}
-
-pub fn spawn_spiders(
-    amount: usize,
-    rate_limiter: Arc<RateLimiter>,
-    sender: Sender<Html>,
-    receiver: Receiver<NextUrl>,
-) {
-    for _ in 0..amount {
-        let rate_limiter = rate_limiter.clone();
-        let sender = sender.clone();
-        let receiver = receiver.clone();
-        tokio::spawn(async move {
-            let spider = Spider::new(rate_limiter, sender, receiver);
-            spider.run().await;
-        });
     }
 }

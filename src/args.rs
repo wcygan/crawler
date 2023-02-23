@@ -15,14 +15,15 @@ pub struct Args {
     pub target: String,
 
     /// The number of connections to use. These send network requests to retrieve HTML.
-    #[clap(short = 's', long = "spiders", default_value = "4")]
-    pub connections: usize,
+    #[clap(short = 's', long = "spiders", default_value_t = 4, value_parser = clap::value_parser ! (u16).range(1..))]
+    pub connections: u16,
 
     /// The number of parsers to use. These interpret HTML and find the next URLs to crawl.
-    #[clap(short = 'p', long = "parsers", default_value = "8")]
-    pub parsers: usize,
+    #[clap(short = 'p', long = "parsers", default_value_t = 100, value_parser = clap::value_parser ! (u16).range(1..))]
+    pub parsers: u16,
 
-    /// The maximum number of requests per second. A high QPS may get your IP blocked from certain sites.
-    #[clap(short = 'q', long = "max-qps", default_value = "0.5")]
-    pub max_qps: f64,
+    /// The millisecond time interval between requests to a  particular domain.
+    /// A low interval results in a high QPS which may get your IP blocked from certain sites.
+    #[clap(short = 'r', long = "rate", default_value_t = 8, value_parser = clap::value_parser ! (u64).range(1..))]
+    pub interval: u64,
 }
