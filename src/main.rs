@@ -10,7 +10,7 @@ use crate::args::Args;
 use crate::index::Index;
 use crate::messages::{Request, Response};
 use crate::run::run;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use async_channel::{Receiver, Sender};
 use clap::Parser;
 use lib_wc::sync::{MultiRateLimiter, ShutdownController};
@@ -18,10 +18,11 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::{select, signal::ctrl_c};
 use tracing::info;
+use url::Url;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let app = Application::new();
+    let app = Application::new().await?;
 
     run(&app)?;
 
@@ -42,7 +43,7 @@ pub struct Application {
 }
 
 impl Application {
-    pub fn new() -> Self {
+    pub async fn new() -> Result<Self> {
         let args = Application::initialize();
         let controller = ShutdownController::new();
         let rate_limiter: Arc<MultiRateLimiter<String>> =
@@ -50,7 +51,13 @@ impl Application {
         let index = Arc::new(Index::new());
         let (send_request, receive_request) = async_channel::bounded::<Request>(1000);
         let (send_response, receive_response) = async_channel::bounded::<Response>(1000);
-        Self {
+
+        send_request
+            .send(Request::new(Url::parse(&args.target)?))
+            .await
+            .context("Failed to send initial request")?;
+
+        Ok(Self {
             args,
             controller,
             rate_limiter,
@@ -59,7 +66,7 @@ impl Application {
             receive_request,
             send_response,
             receive_response,
-        }
+        })
     }
 
     fn initialize() -> Args {

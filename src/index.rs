@@ -14,10 +14,9 @@ impl Index {
 }
 
 impl Drop for Index {
+    // TODO: write the index to a file
     fn drop(&mut self) {
         info!("Dropping index...");
-
-        // TODO: write the index to a file
         for e in self.inner.iter() {
             println!("{} -> {}", e.key(), e.value().len());
             for e in e.value().iter() {

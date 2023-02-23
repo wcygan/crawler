@@ -1,5 +1,6 @@
 use crate::messages::{Request, Response};
 
+use anyhow::{Context, Result};
 use async_channel::{Receiver, Sender};
 use lib_wc::sync::{MultiRateLimiter, ShutdownListener};
 use reqwest::Client;
@@ -44,16 +45,38 @@ impl Spider {
     }
 
     pub async fn run(&mut self) {
+        let Spider {
+            id,
+            client,
+            rate_limiter,
+            shutdown,
+            sender,
+            receiver,
+        } = self;
+
         loop {
-            select! {
-                _ = self.shutdown.recv() => {
-                    info!("Shutting down spider {}...", self.id);
+            let res: Result<Request> = select! {
+                _ = shutdown.recv() => {
+                    info!("Shutting down spider {}...", id);
                     break;
                 }
-                next_url = self.receiver.recv() => {
+                next_url = receiver.recv() => {
+                    next_url.context("Spider failed to receive URL")
+                }
+            };
 
+            match res {
+                Ok(url) => {
+                    info!("Spider {} received URL: {}", id, url.url);
+                    Spider::crawl(url).await;
+                }
+                Err(e) => {
+                    info!("Spider {} failed to receive URL: {}", id, e);
+                    continue;
                 }
             }
         }
     }
+
+    async fn crawl(req: Request) {}
 }

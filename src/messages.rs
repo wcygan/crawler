@@ -10,3 +10,9 @@ pub struct Response {
 pub struct Request {
     pub url: Url,
 }
+
+impl Request {
+    pub fn new(url: Url) -> Self {
+        Self { url }
+    }
+}
