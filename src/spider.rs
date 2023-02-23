@@ -80,10 +80,14 @@ impl Spider {
             };
 
             let res = select! {
-                res = rate_limiter.throttle(domain.to_string(), || Spider::crawl(url)) => res,
+                res = rate_limiter.throttle(domain.to_string(), || Spider::crawl(url)) => {
+                    // Type hint so that the IDE doesn't complain :)
+                    let res: Result<Response> = res;
+                    res
+                },
                 _ = shutdown.recv() => {
                     info!("Shutting down spider {}...", id);
-                    break;
+                    return;
                 }
             };
 
