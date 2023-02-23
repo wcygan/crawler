@@ -2,7 +2,7 @@ use dashmap::{DashMap, DashSet};
 use tracing::info;
 
 pub struct Index {
-    inner: DashMap<String, DashSet<String>>,
+    pub inner: DashMap<String, DashSet<String>>,
 }
 
 impl Index {

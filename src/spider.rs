@@ -8,7 +8,7 @@ use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::Arc;
 use tokio::select;
-use tracing::info;
+use tracing::{error, info};
 
 /// The spider which crawls the web.
 pub struct Spider {
@@ -55,6 +55,7 @@ impl Spider {
         } = self;
 
         loop {
+            // Get the next URL to crawl
             let res: Result<Request> = select! {
                 _ = shutdown.recv() => {
                     info!("Shutting down spider {}...", id);
@@ -65,22 +66,34 @@ impl Spider {
                 }
             };
 
-            if let Ok(url) = res {
-                info!("Spider {} received URL: {}", id, url.url);
+            let url = match res {
+                Ok(url) => url,
+                Err(e) => {
+                    error!("Spider failed to receive URL: {}", e);
+                    continue;
+                }
+            };
 
-                let domain = match url.url.domain() {
-                    Some(domain) => domain.to_string(),
-                    _ => continue,
-                };
+            let domain = match url.url.domain() {
+                Some(domain) => domain.to_string(),
+                _ => continue,
+            };
 
-                let _res = rate_limiter
-                    .throttle(domain.to_string(), || Spider::crawl(url))
-                    .await;
+            let res = rate_limiter
+                .throttle(domain.to_string(), || Spider::crawl(url))
+                .await;
+
+            if let Ok(response) = res {
+                if let Err(e) = sender.send(response).await {
+                    error!("Spider failed to send response: {}", e);
+                }
             }
         }
     }
 
     async fn crawl(req: Request) -> Result<Response> {
-        todo!()
+        info!("Crawling {}", req.url);
+        let res = reqwest::get(req.url.as_str()).await?;
+        Ok(Response::new(req.url, res))
     }
 }

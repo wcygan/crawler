@@ -5,7 +5,7 @@ use clap::Parser;
 use scraper::{Html, Selector};
 use url::Url;
 
-pub fn get_urls(url: &str, html: &str) -> Result<Vec<String>> {
+pub fn get_urls(url: Url, html: &str) -> Result<Vec<String>> {
     let fragment = Html::parse_document(html);
     let selector =
         Selector::parse("a").map_err(|e| anyhow::anyhow!("Failed to parse selector: {}", e))?;
@@ -14,7 +14,7 @@ pub fn get_urls(url: &str, html: &str) -> Result<Vec<String>> {
     for element in fragment.select(&selector) {
         if let Some(path) = element.value().attr("href") {
             if path.starts_with('/') {
-                match get_base_url(url) {
+                match get_base_url(&url) {
                     Some(base_url) => {
                         let url = join_urls(&base_url, path).context("Failed to join URLs")?;
                         urls.push(url.to_string());
@@ -32,14 +32,12 @@ pub fn get_urls(url: &str, html: &str) -> Result<Vec<String>> {
     Ok(urls)
 }
 
-fn get_base_url(url_string: &str) -> Option<String> {
-    match Url::parse(url_string) {
-        Ok(url) => {
-            let base_url = url.join("/").unwrap();
-            Some(base_url.to_string())
-        }
-        Err(_) => None,
-    }
+fn get_base_url(url: &Url) -> Option<String> {
+    let base_url = url
+        .domain()
+        .map(|domain| format!("{}://{}", url.scheme(), domain));
+
+    base_url
 }
 
 fn join_urls(base_url_string: &str, relative_url: &str) -> Option<String> {
@@ -48,9 +46,10 @@ fn join_urls(base_url_string: &str, relative_url: &str) -> Option<String> {
         Err(_) => return None,
     };
 
-    let joined_url = base_url.join(relative_url).unwrap();
-
-    Some(joined_url.to_string())
+    base_url
+        .join(relative_url)
+        .ok()
+        .map(|url| url.as_str().to_string())
 }
 
 pub fn normalize_url(url_str: &str) -> Option<String> {
@@ -75,7 +74,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_get_urls() {
+    fn test_get_urls() -> Result<()> {
         let url = "https://www.rust-lang.org";
         let html = r#"
             <html>
@@ -87,11 +86,12 @@ mod tests {
             </html>
         "#;
 
-        let urls = get_urls(url, html).unwrap();
+        let urls = get_urls(Url::parse(url)?, html).unwrap();
         assert_eq!(urls.len(), 3);
         assert_eq!(urls[0], "https://www.rust-lang.org/foo");
         assert_eq!(urls[1], "https://www.rust-lang.org/bar");
         assert_eq!(urls[2], "https://www.rust-lang.org");
+        Ok(())
     }
 
     #[test]
