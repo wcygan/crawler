@@ -65,18 +65,22 @@ impl Spider {
                 }
             };
 
-            match res {
-                Ok(url) => {
-                    info!("Spider {} received URL: {}", id, url.url);
-                    Spider::crawl(url).await;
-                }
-                Err(e) => {
-                    info!("Spider {} failed to receive URL: {}", id, e);
-                    continue;
-                }
+            if let Ok(url) = res {
+                info!("Spider {} received URL: {}", id, url.url);
+
+                let domain = match url.url.domain() {
+                    Some(domain) => domain.to_string(),
+                    _ => continue,
+                };
+
+                let _res = rate_limiter
+                    .throttle(domain.to_string(), || Spider::crawl(url))
+                    .await;
             }
         }
     }
 
-    async fn crawl(req: Request) {}
+    async fn crawl(req: Request) -> Result<Response> {
+        todo!()
+    }
 }
