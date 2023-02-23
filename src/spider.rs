@@ -54,6 +54,12 @@ impl Spider {
             receiver,
         } = self;
 
+        // TODO: split this up so that the program can terminate immediately (or use shutdown on every await...)
+        // select! {
+        //    _ = self.shutdown.recv() => { }
+        //    _ = do_work => { }
+        // }
+
         loop {
             info!("Spider {} is waiting for URL...", id);
 

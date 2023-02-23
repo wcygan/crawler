@@ -44,6 +44,12 @@ impl Processor {
     }
 
     pub async fn run(&mut self) {
+        // TODO: split this up so that the program can terminate immediately (or use shutdown on every await...)
+        // select! {
+        //    _ = self.shutdown.recv() => { }
+        //    _ = do_work => { }
+        // }
+
         loop {
             info!("Processor {} is waiting for HTML...", self.id);
             let res: Result<Response> = select! {
@@ -112,3 +118,5 @@ impl Processor {
         }
     }
 }
+
+pub async fn do_work() {}
