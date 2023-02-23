@@ -71,6 +71,7 @@ impl Application {
 
     fn initialize() -> Args {
         let args = Args::parse();
+        // console_subscriber::init();
         tracing_subscriber::fmt::init();
         info!("Starting up...");
         args

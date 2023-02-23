@@ -15,7 +15,7 @@ pub struct Args {
     pub target: String,
 
     /// The number of connections to use. These send network requests to retrieve HTML.
-    #[clap(short = 's', long = "spiders", default_value_t = 16, value_parser = clap::value_parser ! (u16).range(1..))]
+    #[clap(short = 's', long = "spiders", default_value_t = 64, value_parser = clap::value_parser ! (u16).range(1..))]
     pub connections: u16,
 
     /// The number of processors to use. Processors interpret HTML and find the next URLs to crawl.

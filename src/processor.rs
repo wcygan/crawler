@@ -45,6 +45,7 @@ impl Processor {
 
     pub async fn run(&mut self) {
         loop {
+            info!("Processor {} is waiting for HTML...", self.id);
             let res: Result<Response> = select! {
                 _ = self.shutdown.recv() => {
                     info!("Shutting down processor {}...", self.id);

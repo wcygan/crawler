@@ -55,11 +55,13 @@ impl Spider {
         } = self;
 
         loop {
+            info!("Spider {} is waiting for URL...", id);
+
             // Get the next URL to crawl
             let res: Result<Request> = select! {
                 _ = shutdown.recv() => {
                     info!("Shutting down spider {}...", id);
-                    break;
+                    return;
                 }
                 next_url = receiver.recv() => {
                     next_url.context("Spider failed to receive URL")
