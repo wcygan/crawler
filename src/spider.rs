@@ -79,9 +79,13 @@ impl Spider {
                 _ => continue,
             };
 
-            let res = rate_limiter
-                .throttle(domain.to_string(), || Spider::crawl(url))
-                .await;
+            let res = select! {
+                res = rate_limiter.throttle(domain.to_string(), || Spider::crawl(url)) => res,
+                _ = shutdown.recv() => {
+                    info!("Shutting down spider {}...", id);
+                    break;
+                }
+            };
 
             if let Ok(response) = res {
                 if let Err(e) = sender.send(response).await {

@@ -18,7 +18,7 @@ impl Drop for Index {
     fn drop(&mut self) {
         info!("Dropping index...");
         for e in self.inner.iter() {
-            println!("{} -> {}", e.key(), e.value().len());
+            info!("{} -> {}", e.key(), e.value().len());
             for e in e.value().iter() {
                 info!("\t-> {}", e.key());
             }

@@ -92,6 +92,7 @@ impl Processor {
             match self.index.inner.entry(key.clone()) {
                 Occupied(entry) => {
                     for url in urls {
+                        info!("Found URL: {}", url);
                         match Url::parse(url.as_str()) {
                             Ok(url) => {
                                 if !entry.get().contains(url.as_str()) {
