@@ -10,7 +10,7 @@ use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::Arc;
 use tokio::select;
-use tracing::{error, info};
+use tracing::{debug, info};
 use url::Url;
 
 pub struct Processor {
@@ -58,7 +58,7 @@ impl Processor {
             let response = match res {
                 Ok(response) => response,
                 Err(err) => {
-                    error!("Failure: {}", err);
+                    debug!("Failure: {}", err);
                     continue;
                 }
             };
@@ -66,7 +66,7 @@ impl Processor {
             let text = match response.response.text().await {
                 Ok(text) => text,
                 Err(err) => {
-                    error!("Failed to get text from response: {}", err);
+                    debug!("Failed to get text from response: {}", err);
                     continue;
                 }
             };
@@ -84,7 +84,7 @@ impl Processor {
             let urls = match get_urls(response.source, &text) {
                 Ok(urls) => urls,
                 Err(err) => {
-                    error!("Failed to get URLs from HTML: {}", err);
+                    debug!("Failed to get URLs from HTML: {}", err);
                     continue;
                 }
             };
@@ -92,7 +92,6 @@ impl Processor {
             match self.index.inner.entry(key.clone()) {
                 Occupied(entry) => {
                     for url in urls {
-                        info!("Found URL: {}", url);
                         match Url::parse(url.as_str()) {
                             Ok(url) => {
                                 if !entry.get().contains(url.as_str()) {
@@ -100,7 +99,7 @@ impl Processor {
                                 }
                             }
                             Err(err) => {
-                                error!("Failed to parse URL: {}", err);
+                                debug!("Failed to parse URL {}: {}", url, err);
                             }
                         }
 

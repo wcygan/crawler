@@ -6,7 +6,7 @@ use anyhow::Result;
 pub fn run(app: &Application) -> Result<()> {
     // Start the spiders
     for _ in 0..app.args.connections {
-        let mut spider = new_spider(&app);
+        let mut spider = new_spider(app);
         tokio::spawn(async move {
             spider.run().await;
         });
@@ -14,7 +14,7 @@ pub fn run(app: &Application) -> Result<()> {
 
     // Start the processors
     for _ in 0..app.args.processors {
-        let mut processor = new_processor(&app);
+        let mut processor = new_processor(app);
         tokio::spawn(async move {
             processor.run().await;
         });

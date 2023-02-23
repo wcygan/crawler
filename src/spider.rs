@@ -8,7 +8,7 @@ use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::Arc;
 use tokio::select;
-use tracing::{error, info};
+use tracing::{debug, info};
 
 /// The spider which crawls the web.
 pub struct Spider {
@@ -47,7 +47,7 @@ impl Spider {
     pub async fn run(&mut self) {
         let Spider {
             id,
-            client,
+            client: _,
             rate_limiter,
             shutdown,
             sender,
@@ -69,7 +69,7 @@ impl Spider {
             let url = match res {
                 Ok(url) => url,
                 Err(e) => {
-                    error!("Spider failed to receive URL: {}", e);
+                    debug!("Spider failed to receive URL: {}", e);
                     continue;
                 }
             };
@@ -93,7 +93,7 @@ impl Spider {
 
             if let Ok(response) = res {
                 if let Err(e) = sender.send(response).await {
-                    error!("Spider failed to send response: {}", e);
+                    debug!("Spider failed to send response: {}", e);
                 }
             }
         }
