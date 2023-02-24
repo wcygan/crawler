@@ -1,7 +1,7 @@
 use crate::index::Index;
 use crate::messages::{Request, Response};
 use crate::urls::get_urls;
-use anyhow::{Context, Result};
+
 use async_channel::{Receiver, Sender};
 use dashmap::mapref::entry::Entry::{Occupied, Vacant};
 use dashmap::DashSet;
@@ -10,12 +10,12 @@ use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::Arc;
 use tokio::select;
-use tracing::{debug, info};
+use tracing::debug;
 use url::Url;
 
 pub struct Processor {
     /// The ID of the processor.
-    id: usize,
+    _id: usize,
     /// The channel to receive HTML from.
     receiver: Receiver<Response>,
     /// The channel to send URLs to crawl to.
@@ -35,7 +35,7 @@ impl Processor {
     ) -> Self {
         static COUNTER: AtomicUsize = AtomicUsize::new(0);
         Self {
-            id: COUNTER.fetch_add(1, SeqCst),
+            _id: COUNTER.fetch_add(1, SeqCst),
             receiver,
             sender,
             shutdown,
@@ -45,7 +45,7 @@ impl Processor {
 
     pub async fn run(&mut self) {
         let Processor {
-            id,
+            _id: _,
             receiver,
             sender,
             shutdown,
@@ -59,11 +59,7 @@ impl Processor {
     }
 }
 
-pub async fn do_work(
-    mut receiver: &Receiver<Response>,
-    mut sender: &Sender<Request>,
-    mut index: &Arc<Index>,
-) {
+pub async fn do_work(receiver: &Receiver<Response>, sender: &Sender<Request>, index: &Arc<Index>) {
     loop {
         let res = receiver.recv().await;
 

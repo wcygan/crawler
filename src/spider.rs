@@ -1,6 +1,6 @@
 use crate::messages::{Request, Response};
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use async_channel::{Receiver, Sender};
 use lib_wc::sync::{MultiRateLimiter, ShutdownListener};
 use reqwest::Client;
@@ -13,7 +13,7 @@ use tracing::{debug, info};
 /// The spider which crawls the web.
 pub struct Spider {
     /// The ID of the spider.
-    id: usize,
+    _id: usize,
     /// The HTTP client.
     client: Client,
     /// The rate limiter.
@@ -35,7 +35,7 @@ impl Spider {
     ) -> Self {
         static COUNTER: AtomicUsize = AtomicUsize::new(0);
         Self {
-            id: COUNTER.fetch_add(1, SeqCst),
+            _id: COUNTER.fetch_add(1, SeqCst),
             client: Client::new(),
             rate_limiter,
             shutdown,
@@ -46,7 +46,7 @@ impl Spider {
 
     pub async fn run(&mut self) {
         let Spider {
-            id,
+            _id: _,
             client,
             rate_limiter,
             shutdown,
@@ -63,9 +63,9 @@ impl Spider {
 
 async fn do_work(
     client: &Client,
-    mut rate_limiter: &MultiRateLimiter<String>,
-    mut sender: &Sender<Response>,
-    mut receiver: &Receiver<Request>,
+    rate_limiter: &MultiRateLimiter<String>,
+    sender: &Sender<Response>,
+    receiver: &Receiver<Request>,
 ) {
     loop {
         let res = receiver.recv().await;
