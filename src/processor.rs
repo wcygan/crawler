@@ -53,9 +53,7 @@ impl Processor {
         } = self;
 
         select! {
-           _ = shutdown.recv() => {
-                info!("Processor {} shutting down", id);
-            }
+           _ = shutdown.recv() => { }
            _ = do_work(receiver, sender, index) => { }
         }
     }

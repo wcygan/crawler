@@ -19,11 +19,15 @@ pub struct Args {
     pub connections: u16,
 
     /// The number of processors to use. Processors interpret HTML and find the next URLs to crawl.
-    #[clap(short = 'p', long = "parsers", default_value_t = 100, value_parser = clap::value_parser ! (u16).range(1..))]
+    #[clap(short = 'p', long = "parsers", default_value_t = 16, value_parser = clap::value_parser ! (u16).range(1..))]
     pub processors: u16,
 
     /// The millisecond time interval between requests to a  particular domain.
     /// A low interval results in a high QPS which may get your IP blocked from certain sites.
     #[clap(short = 'r', long = "rate", default_value_t = 5000, value_parser = clap::value_parser ! (u64).range(1..))]
     pub interval: u64,
+
+    /// The file to write the index to. Optional.
+    #[clap(short = 'o', long = "output")]
+    pub output: Option<String>,
 }

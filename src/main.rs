@@ -13,6 +13,7 @@ use crate::run::run;
 use anyhow::{Context, Result};
 use async_channel::{Receiver, Sender};
 use clap::Parser;
+use dashmap::DashSet;
 use lib_wc::sync::{MultiRateLimiter, ShutdownController};
 use std::sync::Arc;
 use std::time::Duration;
@@ -44,18 +45,26 @@ pub struct Application {
 
 impl Application {
     pub async fn new() -> Result<Self> {
-        let args = Application::initialize();
+        let mut args = Application::initialize();
         let controller = ShutdownController::new();
         let rate_limiter: Arc<MultiRateLimiter<String>> =
             Arc::new(MultiRateLimiter::new(Duration::from_millis(args.interval)));
-        let index = Arc::new(Index::new());
+        let index = Arc::new(Index::new(args.output.take()));
         let (send_request, receive_request) = async_channel::unbounded();
         let (send_response, receive_response) = async_channel::unbounded();
 
+        // Seed the initial request
         send_request
             .send(Request::new(Url::parse(&args.target)?))
             .await
             .context("Failed to send initial request")?;
+
+        // Set the initial URL as visited
+        index
+            .inner
+            .entry(args.target.clone())
+            .or_insert_with(DashSet::new)
+            .insert(args.target.clone());
 
         Ok(Self {
             args,

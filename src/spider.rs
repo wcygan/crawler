@@ -55,9 +55,7 @@ impl Spider {
         } = self;
 
         select! {
-            _ = shutdown.recv() => {
-                info!("Spider {} shutting down", id);
-            }
+            _ = shutdown.recv() => { }
             _ = do_work(client, rate_limiter, sender, receiver) => { }
         }
     }
