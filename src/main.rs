@@ -13,7 +13,6 @@ use crate::run::run;
 use anyhow::{Context, Result};
 use async_channel::{Receiver, Sender};
 use clap::Parser;
-use dashmap::DashSet;
 use lib_wc::sync::{MultiRateLimiter, ShutdownController};
 use std::sync::Arc;
 use std::time::Duration;

@@ -14,20 +14,20 @@ pub struct Args {
     #[clap(short = 't', long = "target", default_value = "https://www.wcygan.io")]
     pub target: String,
 
-    /// The number of connections to use. These send network requests to retrieve HTML.
-    #[clap(short = 's', long = "spiders", default_value_t = 64, value_parser = clap::value_parser ! (u16).range(1..))]
+    /// The number of connections to use. Connections are background tasks that send network requests to retrieve HTML.
+    #[clap(short = 's', long = "connections", default_value_t = 64, value_parser = clap::value_parser ! (u16).range(1..))]
     pub connections: u16,
 
-    /// The number of processors to use. Processors interpret HTML and find the next URLs to crawl.
-    #[clap(short = 'p', long = "parsers", default_value_t = 16, value_parser = clap::value_parser ! (u16).range(1..))]
+    /// The number of processors to use. Processors are background tasks that interpret HTML and find the next URLs to crawl.
+    #[clap(short = 'p', long = "processors", default_value_t = 16, value_parser = clap::value_parser ! (u16).range(1..))]
     pub processors: u16,
 
     /// The millisecond time interval between requests to a  particular domain.
     /// A low interval results in a high QPS which may get your IP blocked from certain sites.
-    #[clap(short = 'r', long = "rate", default_value_t = 5000, value_parser = clap::value_parser ! (u64).range(1..))]
+    #[clap(short = 'i', long = "interval", default_value_t = 5000, value_parser = clap::value_parser ! (u64).range(1..))]
     pub interval: u64,
 
-    /// The file to write the index to. Optional.
+    /// The file to write the index to (default: None).
     #[clap(short = 'o', long = "output")]
     pub output: Option<String>,
 }
