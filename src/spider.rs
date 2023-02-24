@@ -1,6 +1,6 @@
 use crate::messages::{Request, Response};
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use async_channel::{Receiver, Sender};
 use lib_wc::sync::{MultiRateLimiter, ShutdownListener};
 use reqwest::Client;
@@ -13,7 +13,7 @@ use tracing::{debug, info};
 /// The spider which crawls the web.
 pub struct Spider {
     /// The ID of the spider.
-    id: usize,
+    _id: usize,
     /// The HTTP client.
     client: Client,
     /// The rate limiter.
@@ -35,7 +35,7 @@ impl Spider {
     ) -> Self {
         static COUNTER: AtomicUsize = AtomicUsize::new(0);
         Self {
-            id: COUNTER.fetch_add(1, SeqCst),
+            _id: COUNTER.fetch_add(1, SeqCst),
             client: Client::new(),
             rate_limiter,
             shutdown,
@@ -46,7 +46,7 @@ impl Spider {
 
     pub async fn run(&mut self) {
         let Spider {
-            id,
+            _id: _,
             client,
             rate_limiter,
             shutdown,
@@ -54,62 +54,49 @@ impl Spider {
             receiver,
         } = self;
 
-        // TODO: split this up so that the program can terminate immediately (or use shutdown on every await...)
-        // select! {
-        //    _ = self.shutdown.recv() => { }
-        //    _ = do_work => { }
-        // }
+        select! {
+            _ = shutdown.recv() => { }
+            _ = do_work(client, rate_limiter, sender, receiver) => { }
+        }
+    }
+}
 
-        loop {
-            info!("Spider {} is waiting for URL...", id);
+async fn do_work(
+    client: &Client,
+    rate_limiter: &MultiRateLimiter<String>,
+    sender: &Sender<Response>,
+    receiver: &Receiver<Request>,
+) {
+    loop {
+        let res = receiver.recv().await;
 
-            // Get the next URL to crawl
-            let res: Result<Request> = select! {
-                _ = shutdown.recv() => {
-                    info!("Shutting down spider {}...", id);
-                    return;
-                }
-                next_url = receiver.recv() => {
-                    next_url.context("Spider failed to receive URL")
-                }
-            };
+        let url = match res {
+            Ok(url) => url,
+            Err(e) => {
+                debug!("Spider failed to receive URL: {}", e);
+                continue;
+            }
+        };
 
-            let url = match res {
-                Ok(url) => url,
-                Err(e) => {
-                    debug!("Spider failed to receive URL: {}", e);
-                    continue;
-                }
-            };
+        let domain = match url.url.domain() {
+            Some(domain) => domain.to_string(),
+            _ => continue,
+        };
 
-            let domain = match url.url.domain() {
-                Some(domain) => domain.to_string(),
-                _ => continue,
-            };
+        let res = rate_limiter
+            .throttle(domain.to_string(), || crawl(client, url))
+            .await;
 
-            let res = select! {
-                res = rate_limiter.throttle(domain.to_string(), || Spider::crawl(client, url)) => {
-                    // Type hint so that the IDE doesn't complain :)
-                    let res: Result<Response> = res;
-                    res
-                },
-                _ = shutdown.recv() => {
-                    info!("Shutting down spider {}...", id);
-                    return;
-                }
-            };
-
-            if let Ok(response) = res {
-                if let Err(e) = sender.send(response).await {
-                    debug!("Spider failed to send response: {}", e);
-                }
+        if let Ok(response) = res {
+            if let Err(e) = sender.send(response).await {
+                debug!("Spider failed to send response: {}", e);
             }
         }
     }
+}
 
-    async fn crawl(mut client: &Client, req: Request) -> Result<Response> {
-        info!("Crawling {}", req.url);
-        let res = client.get(req.url.as_str()).send().await?;
-        Ok(Response::new(req.url, res))
-    }
+async fn crawl(client: &Client, req: Request) -> Result<Response> {
+    info!("Crawling {}", req.url);
+    let res = client.get(req.url.as_str()).send().await?;
+    Ok(Response::new(req.url, res))
 }

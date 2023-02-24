@@ -8,11 +8,12 @@ anyhow = "1.0.69"
 async-channel = "1.8.0"
 clap = { version = "4.1.6", features = ["derive"] }
 lib-wc = "0.1.14"
-dashmap = "5.4.0"
+dashmap = { version = "5.4.0", features = ["serde"] }
 reqwest = { version = "0.11", features = ["json"] }
 scraper = "0.14.0"
 tokio = { version = "1.25.0", features = ["full", "tracing"] }
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
 url = "2.3.1"
-#console-subscriber = "0.1.8"
+serde = "1.0.152"
+serde_json = "1.0.93"
