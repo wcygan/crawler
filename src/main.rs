@@ -59,13 +59,6 @@ impl Application {
             .await
             .context("Failed to send initial request")?;
 
-        // Set the initial URL as visited
-        index
-            .inner
-            .entry(args.target.clone())
-            .or_insert_with(DashSet::new)
-            .insert(args.target.clone());
-
         Ok(Self {
             args,
             controller,
