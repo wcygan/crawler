@@ -49,8 +49,8 @@ impl Application {
         let rate_limiter: Arc<MultiRateLimiter<String>> =
             Arc::new(MultiRateLimiter::new(Duration::from_millis(args.interval)));
         let index = Arc::new(Index::new());
-        let (send_request, receive_request) = async_channel::bounded::<Request>(1000);
-        let (send_response, receive_response) = async_channel::bounded::<Response>(1000);
+        let (send_request, receive_request) = async_channel::unbounded();
+        let (send_response, receive_response) = async_channel::unbounded();
 
         send_request
             .send(Request::new(Url::parse(&args.target)?))
@@ -71,7 +71,6 @@ impl Application {
 
     fn initialize() -> Args {
         let args = Args::parse();
-        // console_subscriber::init();
         tracing_subscriber::fmt::init();
         info!("Starting up...");
         args

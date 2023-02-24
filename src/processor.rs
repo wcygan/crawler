@@ -44,79 +44,83 @@ impl Processor {
     }
 
     pub async fn run(&mut self) {
-        // TODO: split this up so that the program can terminate immediately (or use shutdown on every await...)
-        // select! {
-        //    _ = self.shutdown.recv() => { }
-        //    _ = do_work => { }
-        // }
+        let Processor {
+            id,
+            receiver,
+            sender,
+            shutdown,
+            index,
+        } = self;
 
-        loop {
-            info!("Processor {} is waiting for HTML...", self.id);
-            let res: Result<Response> = select! {
-                _ = self.shutdown.recv() => {
-                    info!("Shutting down processor {}...", self.id);
-                    return;
-                }
-                res = self.receiver.recv() => {
-                    res.context("Failed to receive HTML")
-                }
-            };
-
-            let response = match res {
-                Ok(response) => response,
-                Err(err) => {
-                    debug!("Failure: {}", err);
-                    continue;
-                }
-            };
-
-            let text = match response.response.text().await {
-                Ok(text) => text,
-                Err(err) => {
-                    debug!("Failed to get text from response: {}", err);
-                    continue;
-                }
-            };
-
-            let key = response.source.to_string();
-
-            // Check if we've already processed this URL
-            match self.index.inner.entry(key.clone()) {
-                Occupied(_entry) => continue,
-                Vacant(entry) => {
-                    entry.insert(DashSet::new());
-                }
+        select! {
+           _ = shutdown.recv() => {
+                info!("Processor {} shutting down", id);
             }
-
-            let urls = match get_urls(response.source, &text) {
-                Ok(urls) => urls,
-                Err(err) => {
-                    debug!("Failed to get URLs from HTML: {}", err);
-                    continue;
-                }
-            };
-
-            match self.index.inner.entry(key.clone()) {
-                Occupied(entry) => {
-                    for url in urls {
-                        match Url::parse(url.as_str()) {
-                            Ok(url) => {
-                                if !entry.get().contains(url.as_str()) {
-                                    let _ = self.sender.send(Request { url }).await;
-                                }
-                            }
-                            Err(err) => {
-                                debug!("Failed to parse URL {}: {}", url, err);
-                            }
-                        }
-
-                        entry.get().insert(url);
-                    }
-                }
-                Vacant(_entry) => unreachable!(),
-            }
+           _ = do_work(receiver, sender, index) => { }
         }
     }
 }
 
-pub async fn do_work() {}
+pub async fn do_work(
+    mut receiver: &Receiver<Response>,
+    mut sender: &Sender<Request>,
+    mut index: &Arc<Index>,
+) {
+    loop {
+        let res = receiver.recv().await;
+
+        let response = match res {
+            Ok(response) => response,
+            Err(err) => {
+                debug!("Failure: {}", err);
+                continue;
+            }
+        };
+
+        let text = match response.response.text().await {
+            Ok(text) => text,
+            Err(err) => {
+                debug!("Failed to get text from response: {}", err);
+                continue;
+            }
+        };
+
+        let key = response.source.to_string();
+
+        // Check if we've already processed this URL
+        match index.inner.entry(key.clone()) {
+            Occupied(_entry) => continue,
+            Vacant(entry) => {
+                entry.insert(DashSet::new());
+            }
+        }
+
+        let urls = match get_urls(response.source, &text) {
+            Ok(urls) => urls,
+            Err(err) => {
+                debug!("Failed to get URLs from HTML: {}", err);
+                continue;
+            }
+        };
+
+        match index.inner.entry(key.clone()) {
+            Occupied(entry) => {
+                for url in urls {
+                    match Url::parse(url.as_str()) {
+                        Ok(url) => {
+                            if !entry.get().contains(url.as_str()) {
+                                let _ = sender.send(Request { url }).await;
+                            }
+                        }
+                        Err(err) => {
+                            debug!("Failed to parse URL {}: {}", url, err);
+                        }
+                    }
+
+                    entry.get().insert(url);
+                }
+            }
+            Vacant(_entry) => unreachable!(),
+        }
+    }
+}
