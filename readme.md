@@ -2,7 +2,7 @@
 
 A web crawler written in Rust.
 
-This crawler is used to find all URLs on a given web page.
+This crawler creates a web graph by exploring all URLs that it finds.
 
 ## Design
 
