@@ -1,47 +1,27 @@
 # Crawler
 
-A web crawler written in Rust
+A web crawler written in Rust.
 
-## Usage
+This crawler is used to find all URLs on a given web page.
 
-```bash
-$ cargo run --release -- --help
+## Design
 
-A web crawler.
+The crawler is split into two parts:
 
-This program crawls the web starting from a given URL.
+1. The connection pool
+2. The processor pool
 
-It uses a pool of spiders to send HTTP requests and a pool of parsers to interpret the HTML and find the next URLs to crawl. The level of concurrency of each pool is configurable.
+The crawler will spin up as many connections & processors as you specify. 
 
-Beware that a high QPS may get your IP blocked from certain sites.
+The connection pool will handle all HTTP requests, while the processor pool will handle all HTML parsing.
 
-Usage: crawler [OPTIONS]
+Requests to the same domain are rate limited to avoid being blocked by the server.
 
-Options:
-  -t, --target <TARGET>
-          The target URL to start crawling from
-          
-          [default: https://www.wcygan.io]
+The URL mapping is written to an index which can be written to disk during shutdown.
 
-  -s, --connections <CONNECTIONS>
-          The number of connections to use. Connections are background tasks that send network requests to retrieve HTML
-          
-          [default: 64]
+## Resources
 
-  -p, --processors <PROCESSORS>
-          The number of processors to use. Processors are background tasks that interpret HTML and find the next URLs to crawl
-          
-          [default: 16]
-
-  -i, --interval <INTERVAL>
-          The millisecond time interval between requests to a  particular domain. A low interval results in a high QPS which may get your IP blocked from certain sites
-          
-          [default: 5000]
-
-  -o, --output <OUTPUT>
-          The file to write the index to (default: None)
-
-  -h, --help
-          Print help (see a summary with '-h')
-```
-
+- [Tokio](https://tokio.rs/) - asynchronous runtime
+- [Reqwest](https://docs.rs/reqwest/latest/reqwest/) - HTTP client
+- [Dashmap](https://docs.rs/dashmap/5.4.0/dashmap/) - concurrent hash map
+- [lib-wc](https://docs.rs/lib-wc/latest/lib_wc/) - concurrent rate limiting & graceful shutdown
