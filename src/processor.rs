@@ -5,7 +5,7 @@ use crate::urls::get_urls;
 use async_channel::{Receiver, Sender};
 use dashmap::mapref::entry::Entry::{Occupied, Vacant};
 use dashmap::DashSet;
-use lib_wc::sync::ShutdownListener;
+use shutdown_async::ShutdownMonitor;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::Arc;
@@ -21,14 +21,14 @@ pub struct Processor {
     /// The channel to send URLs to crawl to.
     sender: Sender<Request>,
     /// The shutdown listener.
-    shutdown: ShutdownListener,
+    shutdown: ShutdownMonitor,
     /// The index.
     index: Arc<Index>,
 }
 
 impl Processor {
     pub fn new(
-        shutdown: ShutdownListener,
+        shutdown: ShutdownMonitor,
         sender: Sender<Request>,
         receiver: Receiver<Response>,
         index: Arc<Index>,

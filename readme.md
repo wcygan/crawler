@@ -24,4 +24,5 @@ The URL mapping is written to an index which can be written to disk during shutd
 - [Tokio](https://tokio.rs/) - asynchronous runtime
 - [Reqwest](https://docs.rs/reqwest/latest/reqwest/) - HTTP client
 - [Dashmap](https://docs.rs/dashmap/5.4.0/dashmap/) - concurrent hash map
-- [lib-wc](https://docs.rs/lib-wc/latest/lib_wc/) - concurrent rate limiting & graceful shutdown
+- [async-throttle](https://docs.rs/async-throttle/latest/async_throttle/) - rate limiter
+- [shutdown-async](https://docs.rs/shutdown-async/latest/shutdown_async/) - graceful shutdown

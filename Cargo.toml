@@ -6,8 +6,9 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.69"
 async-channel = "1.8.0"
+async-throttle = "0.3.1"
+shutdown-async = "0.1.0"
 clap = { version = "4.1.6", features = ["derive"] }
-lib-wc = "0.1.14"
 dashmap = { version = "5.4.0", features = ["serde"] }
 reqwest = { version = "0.11", features = ["json"] }
 scraper = "0.14.0"

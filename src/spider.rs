@@ -2,8 +2,9 @@ use crate::messages::{Request, Response};
 
 use anyhow::Result;
 use async_channel::{Receiver, Sender};
-use lib_wc::sync::{MultiRateLimiter, ShutdownListener};
+use async_throttle::MultiRateLimiter;
 use reqwest::Client;
+use shutdown_async::ShutdownMonitor;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::Arc;
@@ -19,7 +20,7 @@ pub struct Spider {
     /// The rate limiter.
     rate_limiter: Arc<MultiRateLimiter<String>>,
     /// The shutdown listener.
-    shutdown: ShutdownListener,
+    shutdown: ShutdownMonitor,
     /// The channel to send HTML to.
     sender: Sender<Response>,
     /// The channel to receive URLs to crawl.
@@ -28,7 +29,7 @@ pub struct Spider {
 
 impl Spider {
     pub fn new(
-        shutdown: ShutdownListener,
+        shutdown: ShutdownMonitor,
         rate_limiter: Arc<MultiRateLimiter<String>>,
         sender: Sender<Response>,
         receiver: Receiver<Request>,
