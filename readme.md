@@ -22,6 +22,6 @@ The URL mapping is written to an index which can be written to disk during shutd
 ## Resources
 
 - [Tokio](https://crates.io/crates/tokio) - asynchronous runtime
-- [Tokio-utils](https://crates.io/crates/tokio-utils)
+- [Tokio-utils](https://crates.io/crates/tokio-utils) - rate limiter, graceful shutdown
 - [Reqwest](https://crates.io/crates/reqwest/) - HTTP client
 - [Dashmap](https://crates.io/crates/dashmap/) - concurrent hash map
