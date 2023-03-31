@@ -5,11 +5,11 @@ use crate::urls::get_urls;
 use async_channel::{Receiver, Sender};
 use dashmap::mapref::entry::Entry::{Occupied, Vacant};
 use dashmap::DashSet;
-use shutdown_async::ShutdownMonitor;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::Arc;
 use tokio::select;
+use tokio_utils::ShutdownMonitor;
 use tracing::debug;
 use url::Url;
 

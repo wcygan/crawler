@@ -2,13 +2,12 @@ use crate::messages::{Request, Response};
 
 use anyhow::Result;
 use async_channel::{Receiver, Sender};
-use async_throttle::MultiRateLimiter;
 use reqwest::Client;
-use shutdown_async::ShutdownMonitor;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::Arc;
 use tokio::select;
+use tokio_utils::{MultiRateLimiter, ShutdownMonitor};
 use tracing::{debug, info};
 
 /// The spider which crawls the web.

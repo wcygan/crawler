@@ -12,12 +12,11 @@ use crate::messages::{Request, Response};
 use crate::run::run;
 use anyhow::{Context, Result};
 use async_channel::{Receiver, Sender};
-use async_throttle::MultiRateLimiter;
 use clap::Parser;
-use shutdown_async::ShutdownController;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::{select, signal::ctrl_c};
+use tokio_utils::{MultiRateLimiter, ShutdownController};
 use tracing::info;
 use url::Url;
 
