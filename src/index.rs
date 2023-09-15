@@ -3,21 +3,21 @@ use tracing::info;
 
 pub struct Index {
     pub inner: DashMap<String, DashSet<String>>,
-    output: Option<String>,
+    file: Option<String>,
 }
 
 impl Index {
-    pub fn new(output: Option<String>) -> Self {
+    pub fn new(file: Option<String>) -> Self {
         Self {
             inner: DashMap::new(),
-            output,
+            file,
         }
     }
 }
 
 impl Drop for Index {
     fn drop(&mut self) {
-        match self.output {
+        match self.file {
             Some(ref path) => {
                 let mut file = std::fs::File::create(path).unwrap();
                 match serde_json::to_writer(&mut file, &self.inner) {

@@ -15,12 +15,12 @@ pub struct Args {
     pub target: String,
 
     /// The number of connections to use. Connections are background tasks that send network requests to retrieve HTML.
-    #[clap(short = 's', long = "connections", default_value_t = 64, value_parser = clap::value_parser ! (u16).range(1..))]
+    #[clap(short = 'c', long = "connections", default_value_t = 128, value_parser = clap::value_parser ! (u16).range(1..))]
     pub connections: u16,
 
-    /// The number of processors to use. Processors are background tasks that interpret HTML and find the next URLs to crawl.
-    #[clap(short = 'p', long = "processors", default_value_t = 16, value_parser = clap::value_parser ! (u16).range(1..))]
-    pub processors: u16,
+    /// The number of parsers to use. Parsers are background tasks that interpret HTML and find the next URLs to crawl.
+    #[clap(short = 'p', long = "parsers", default_value_t = 64, value_parser = clap::value_parser ! (u16).range(1..))]
+    pub parsers: u16,
 
     /// The millisecond time interval between requests to a  particular domain.
     /// A low interval results in a high QPS which may get your IP blocked from certain sites.
@@ -28,6 +28,6 @@ pub struct Args {
     pub interval: u64,
 
     /// The file to write the index to (default: None).
-    #[clap(short = 'o', long = "output")]
-    pub output: Option<String>,
+    #[clap(short = 'f', long = "file")]
+    pub file: Option<String>,
 }

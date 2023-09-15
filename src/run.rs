@@ -1,4 +1,4 @@
-use crate::processor::Processor;
+use crate::parser::Parser;
 use crate::spider::Spider;
 use crate::Application;
 use anyhow::Result;
@@ -12,11 +12,11 @@ pub fn run(app: &Application) -> Result<()> {
         });
     }
 
-    // Start the processors
-    for _ in 0..app.args.processors {
-        let mut processor = new_processor(app);
+    // Start the parsers
+    for _ in 0..app.args.parsers {
+        let mut parser = new_parser(app);
         tokio::spawn(async move {
-            processor.run().await;
+            parser.run().await;
         });
     }
 
@@ -32,8 +32,8 @@ fn new_spider(app: &Application) -> Spider {
     )
 }
 
-fn new_processor(app: &Application) -> Processor {
-    Processor::new(
+fn new_parser(app: &Application) -> Parser {
+    Parser::new(
         app.controller.subscribe(),
         app.send_request.clone(),
         app.receive_response.clone(),

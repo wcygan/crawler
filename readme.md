@@ -9,11 +9,11 @@ This crawler creates a web graph by exploring all URLs that it finds.
 The crawler is split into two parts:
 
 1. The connection pool
-2. The processor pool
+2. The parser pool
 
-The crawler will spin up as many connections & processors as you specify. 
+The crawler will spin up as many connections & parsers as you specify. 
 
-The connection pool will handle all HTTP requests, while the processor pool will handle all HTML parsing.
+The connection pool will handle all HTTP requests, while the parser pool will handle all HTML parsing.
 
 Requests to the same domain are rate limited to avoid being blocked by the server.
 

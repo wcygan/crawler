@@ -10,7 +10,8 @@ use tokio::select;
 use tokio_utils::{MultiRateLimiter, ShutdownMonitor};
 use tracing::{debug, info};
 
-/// The spider which crawls the web.
+/// Spiders are responsible for sending HTTP requests to retrieve the HTML of a URL.
+/// They pass HTML to the Parsers.
 pub struct Spider {
     /// The ID of the spider.
     _id: usize,
@@ -54,6 +55,7 @@ impl Spider {
             receiver,
         } = self;
 
+        // Run the spider until the shutdown signal is received.
         select! {
             _ = shutdown.recv() => { }
             _ = do_work(client, rate_limiter, sender, receiver) => { }
@@ -68,9 +70,8 @@ async fn do_work(
     receiver: &Receiver<Request>,
 ) {
     loop {
-        let res = receiver.recv().await;
-
-        let url = match res {
+        // Wait for a URL to crawl.
+        let url = match receiver.recv().await {
             Ok(url) => url,
             Err(e) => {
                 debug!("Spider failed to receive URL: {}", e);
@@ -78,15 +79,18 @@ async fn do_work(
             }
         };
 
+        // Determine the domain of the URL to throttle the crawler
         let domain = match url.url.domain() {
             Some(domain) => domain.to_string(),
             _ => continue,
         };
 
+        // Throttle the crawler.
         let res = rate_limiter
             .throttle(domain.to_string(), || crawl(client, url))
             .await;
 
+        // Send the response to the parsers.
         if let Ok(response) = res {
             if let Err(e) = sender.send(response).await {
                 debug!("Spider failed to send response: {}", e);
